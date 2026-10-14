@@ -101,6 +101,9 @@ $('#newCollectionBtn').onclick = openNewCollection;
 $('#addCardBtn').onclick = () => openCardDialog();
 $('#editCollectionBtn').onclick = openEditCollection;
 $('#deleteCollectionBtn').onclick = deleteCollection;
+$$('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => {
+  document.getElementById(button.dataset.closeDialog)?.close();
+}));
 $$('.tab').forEach((tab) => tab.addEventListener('click', () => { view = tab.dataset.view; $$('.tab').forEach((item) => item.classList.toggle('active', item === tab)); renderContent(); }));
 $('#collectionForm').addEventListener('submit', (event) => {
   if (event.submitter?.value === 'cancel') { event.preventDefault(); $('#collectionDialog').close(); return; }
