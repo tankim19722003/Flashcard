@@ -57,12 +57,14 @@ function renderStudy(collection) {
   cardIndex = ((cardIndex % collection.cards.length) + collection.cards.length) % collection.cards.length;
   const card = collection.cards[cardIndex];
   const progress = ((cardIndex + 1) / collection.cards.length) * 100;
-  target.innerHTML = `<div class="study-topline"><span>${String(cardIndex + 1).padStart(2, '0')} / ${String(collection.cards.length).padStart(2, '0')}</span><div class="progress-track"><i style="width:${progress}%"></i></div><span>FLASHCARD</span></div><div class="flashcard ${escapeHtml(card.style || 'paper')} ${flipped ? 'flipped-state' : ''}" id="studyCard" role="button" tabindex="0" aria-label="Thẻ ${flipped ? 'mặt sau' : 'mặt trước'}, bấm để lật"><span class="card-corner"></span><span class="card-toplabel">${flipped ? 'NGHĨA · PINYIN' : escapeHtml(collection.name)}</span><div class="${flipped ? 'card-back' : 'card-front'}">${escapeHtml(flipped ? card.back : card.front).replace(/\n/g, '<br>')}</div><span class="card-hint">${flipped ? 'BẤM ĐỂ XEM LẠI TỪ' : 'BẤM ĐỂ LẬT THẺ  ↗'}</span></div><div class="card-actions"><button class="round-action" id="prevCard" aria-label="Thẻ trước">←</button><div class="study-center"><button class="secondary-btn" id="shuffleBtn">⇄　Trộn thẻ</button><button class="primary-btn" id="nextCard">Tiếp theo　→</button></div><button class="round-action" id="nextCardSmall" aria-label="Thẻ tiếp theo">→</button></div>`;
+  target.innerHTML = `<div class="study-topline"><span>${String(cardIndex + 1).padStart(2, '0')} / ${String(collection.cards.length).padStart(2, '0')}</span><div class="progress-track"><i style="width:${progress}%"></i></div><span>FLASHCARD</span></div><div class="flashcard ${escapeHtml(card.style || 'paper')} ${flipped ? 'flipped-state' : ''}" id="studyCard" role="button" tabindex="0" aria-label="Thẻ ${flipped ? 'mặt sau' : 'mặt trước'}, bấm để lật"><span class="card-corner"></span><span class="card-toplabel">${flipped ? 'NGHĨA · PINYIN' : escapeHtml(collection.name)}</span><div class="${flipped ? 'card-back' : 'card-front'}">${escapeHtml(flipped ? card.back : card.front).replace(/\n/g, '<br>')}</div><span class="card-hint">${flipped ? 'BẤM ĐỂ XEM LẠI TỪ' : 'BẤM ĐỂ LẬT THẺ  ↗'}</span></div><div class="card-actions"><div class="card-manage"><button class="card-manage-btn" id="editCurrentCard">✎ <span>Sửa thẻ</span></button><button class="card-manage-btn card-manage-delete" id="deleteCurrentCard">× <span>Xoá thẻ</span></button></div><div class="study-center"><button class="round-action" id="prevCard" aria-label="Thẻ trước">←</button><button class="secondary-btn" id="shuffleBtn">⇄　Trộn thẻ</button><button class="primary-btn" id="nextCard">Tiếp theo　→</button><button class="round-action" id="nextCardSmall" aria-label="Thẻ tiếp theo">→</button></div></div>`;
   const flashcard = $('#studyCard');
   const flip = () => { flipped = !flipped; renderStudy(collection); };
   flashcard.addEventListener('click', flip); flashcard.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); flip(); } });
   const move = (delta) => { cardIndex += delta; flipped = false; renderStudy(collection); };
   $('#prevCard').onclick = () => move(-1); $('#nextCard').onclick = () => move(1); $('#nextCardSmall').onclick = () => move(1);
+  $('#editCurrentCard').onclick = () => openCardDialog(card.id);
+  $('#deleteCurrentCard').onclick = () => deleteCard(card.id);
   $('#shuffleBtn').onclick = () => { if (collection.cards.length > 1) { const old = cardIndex; while (cardIndex === old) cardIndex = Math.floor(Math.random() * collection.cards.length); flipped = false; renderStudy(collection); } else toast('Thêm vài thẻ để trộn nhé.'); };
 }
 function renderAllCards(collection) {
@@ -132,20 +134,42 @@ $('#cardForm').addEventListener('submit', (event) => {
   flipped = false; $('#cardDialog').close(); render(); toast(editingCardId ? 'Đã cập nhật flashcard.' : 'Đã thêm flashcard.');
 });
 $('#backupBtn').onclick = () => {
-  const choice = window.confirm('Chọn OK để xuất bản sao lưu. Chọn Cancel để nhập bản sao lưu từ tệp JSON.');
-  if (choice) {
-    const blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), ...data }, null, 2)], { type: 'application/json' });
-    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `hanzi-backup-${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(link.href); toast('Đã tải bản sao lưu.');
-  } else $('#importFile').click();
+  const backup = { version: 1, exportedAt: new Date().toISOString(), collections: data.collections };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `hanzi-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Đã tải bản sao lưu JSON.');
 };
+$('#importBtn').onclick = () => $('#importFile').click();
 $('#importFile').addEventListener('change', async (event) => {
   const file = event.target.files?.[0]; if (!file) return;
   try {
     const parsed = JSON.parse(await file.text());
-    if (!Array.isArray(parsed.collections) || parsed.collections.some((collection) => typeof collection.name !== 'string' || !Array.isArray(collection.cards) || collection.cards.some((card) => typeof card.front !== 'string' || typeof card.back !== 'string'))) throw new Error('invalid');
-    if (!window.confirm('Khôi phục sẽ thay thế toàn bộ dữ liệu hiện tại trên trình duyệt này. Tiếp tục?')) return;
-    data = parsed; activeId = data.collections[0]?.id || null; cardIndex = 0; flipped = false; render(); toast('Đã khôi phục dữ liệu.');
-  } catch { toast('Tệp sao lưu không hợp lệ.'); }
+    if (!parsed || !Array.isArray(parsed.collections) || parsed.collections.some((collection) =>
+      !collection || typeof collection.name !== 'string' || !Array.isArray(collection.cards) || collection.cards.some((card) =>
+        !card || typeof card.front !== 'string' || typeof card.back !== 'string'))) throw new Error('invalid');
+    const importedCollections = parsed.collections.map((collection) => ({
+      id: typeof collection.id === 'string' && collection.id ? collection.id : uid(),
+      name: collection.name.trim() || 'Bộ sưu tập chưa đặt tên',
+      cards: collection.cards.map((card) => ({
+        id: typeof card.id === 'string' && card.id ? card.id : uid(),
+        front: card.front,
+        back: card.back,
+        style: ['paper', 'ink', 'peach', 'sage'].includes(card.style) ? card.style : 'paper'
+      }))
+    }));
+    if (!window.confirm(`Nhập ${importedCollections.length} bộ sưu tập và thay thế dữ liệu hiện có trên thiết bị này?`)) return;
+    data = { collections: importedCollections };
+    activeId = data.collections[0]?.id || null;
+    cardIndex = 0;
+    flipped = false;
+    render();
+    toast('Đã nhập dữ liệu JSON.');
+  } catch { toast('Tệp JSON không hợp lệ hoặc không đúng định dạng Hanzi.'); }
   finally { event.target.value = ''; }
 });
 render();

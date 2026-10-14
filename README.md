@@ -18,7 +18,7 @@ Mở `index.html` trong trình duyệt. Để xem đúng cách GitHub Pages ph�
 
 - Collection và flashcard được lưu tự động trên trình duyệt, gắn với domain GitHub Pages đó.
 - Dữ liệu không đồng bộ sang thiết bị hoặc trình duyệt khác. Xoá dữ liệu website trong Safari cũng có thể xoá flashcard.
-- Nút biểu tượng `⇅` ở đầu trang để tải JSON sao lưu; bấm Cancel để chọn tệp JSON và khôi phục. Khôi phục thay thế dữ liệu hiện tại trên trình duyệt.
+- Nút **Xuất JSON** ở đầu trang để tải bản sao lưu. Nút **Nhập JSON** nhận file sao lưu do Hanzi xuất ra và thay thế dữ liệu hiện tại sau khi xác nhận.
 - Không chứa mật khẩu hay thông tin nhạy cảm trong thẻ. GitHub Pages chỉ host giao diện; không có tài khoản hoặc cơ sở dữ liệu dùng chung.
 
 ## Cấu trúc
