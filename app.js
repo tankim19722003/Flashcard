@@ -45,6 +45,7 @@ function renderContent() {
   $('#collectionMeta').textContent = collection ? `${collection.cards.length} flashcard · ${collection.cards.length ? 'Ôn tập theo nhịp của bạn' : 'Bắt đầu thêm từ mới nhé'}` : 'Tạo bộ sưu tập đầu tiên để bắt đầu';
   $('#addCardBtn').disabled = !hasCollection;
   $('#editCollectionBtn').style.visibility = hasCollection ? 'visible' : 'hidden';
+  $('#deleteCollectionBtn').style.visibility = hasCollection ? 'visible' : 'hidden';
   $('#studyView').classList.toggle('hidden', view !== 'study');
   $('#allView').classList.toggle('hidden', view !== 'all');
   if (!hasCollection) { $('#studyView').innerHTML = '<div class="empty-state"><div class="empty-illustration">集</div><h3>Bắt đầu bộ sưu tập đầu tiên</h3><p>Tập hợp từ vựng theo chủ đề, giáo trình hay bất kỳ cách nào phù hợp với bạn.</p><button class="primary-btn" id="emptyCollectionBtn">+ Tạo bộ sưu tập</button></div>'; $('#emptyCollectionBtn').onclick = openNewCollection; $('#allView').innerHTML = ''; return; }
@@ -74,6 +75,18 @@ function renderAllCards(collection) {
 }
 function openNewCollection() { editingCollection = false; $('#collectionDialogTitle').textContent = 'Bộ sưu tập mới'; $('#collectionName').value = ''; $('#saveCollectionBtn').textContent = 'Tạo bộ sưu tập'; $('#collectionDialog').showModal(); setTimeout(() => $('#collectionName').focus(), 50); }
 function openEditCollection() { const collection = currentCollection(); if (!collection) return; editingCollection = true; $('#collectionDialogTitle').textContent = 'Đổi tên bộ sưu tập'; $('#collectionName').value = collection.name; $('#saveCollectionBtn').textContent = 'Lưu thay đổi'; $('#collectionDialog').showModal(); setTimeout(() => $('#collectionName').focus(), 50); }
+function deleteCollection() {
+  const collection = currentCollection();
+  if (!collection) return;
+  const confirmed = window.confirm(`Xoá bộ sưu tập “${collection.name}” và toàn bộ ${collection.cards.length} flashcard bên trong?`);
+  if (!confirmed) return;
+  data.collections = data.collections.filter((item) => item.id !== collection.id);
+  activeId = data.collections[0]?.id || null;
+  cardIndex = 0;
+  flipped = false;
+  render();
+  toast('Đã xoá bộ sưu tập.');
+}
 function openCardDialog(cardId = null) {
   const card = currentCollection()?.cards.find((item) => item.id === cardId);
   editingCardId = card?.id || null;
@@ -87,16 +100,17 @@ function deleteCard(cardId) { const collection = currentCollection(); if (!colle
 $('#newCollectionBtn').onclick = openNewCollection;
 $('#addCardBtn').onclick = () => openCardDialog();
 $('#editCollectionBtn').onclick = openEditCollection;
+$('#deleteCollectionBtn').onclick = deleteCollection;
 $$('.tab').forEach((tab) => tab.addEventListener('click', () => { view = tab.dataset.view; $$('.tab').forEach((item) => item.classList.toggle('active', item === tab)); renderContent(); }));
 $('#collectionForm').addEventListener('submit', (event) => {
-  if (event.submitter?.value === 'cancel') return;
+  if (event.submitter?.value === 'cancel') { event.preventDefault(); $('#collectionDialog').close(); return; }
   event.preventDefault(); const name = $('#collectionName').value.trim(); if (!name) return;
   if (editingCollection) { const collection = currentCollection(); if (collection) collection.name = name; }
   else { const collection = { id: uid(), name, cards: [] }; data.collections.push(collection); activeId = collection.id; cardIndex = 0; view = 'study'; }
   $('#collectionDialog').close(); render(); toast(editingCollection ? 'Đã cập nhật bộ sưu tập.' : 'Đã tạo bộ sưu tập.');
 });
 $('#cardForm').addEventListener('submit', (event) => {
-  if (event.submitter?.value === 'cancel') return;
+  if (event.submitter?.value === 'cancel') { event.preventDefault(); $('#cardDialog').close(); return; }
   event.preventDefault(); const collection = currentCollection(); if (!collection) return;
   const card = { id: editingCardId || uid(), front: $('#frontText').value.trim(), back: $('#backText').value.trim(), style: $('input[name="cardStyle"]:checked').value };
   if (!card.front || !card.back) return;
