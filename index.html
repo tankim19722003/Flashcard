@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f5ef">
+  <meta name="description" content="Tạo bộ sưu tập flashcard tiếng Trung và ôn tập ngay trên thiết bị của bạn.">
+  <title>Hanzi — Flashcard tiếng Trung</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Hanzi trang chủ"><span class="brand-mark">汉</span><span>hanzi<span class="brand-dot">.</span></span></a>
+      <div class="top-actions">
+        <span class="save-state"><i></i> Đã lưu trên thiết bị</span>
+        <button class="icon-btn" id="backupBtn" aria-label="Sao lưu dữ liệu" title="Sao lưu / khôi phục">⇅</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="workspace">
+        <aside class="sidebar">
+          <div class="section-heading"><div><div class="eyebrow small">THƯ VIỆN</div><h2>Bộ sưu tập</h2></div><button class="add-collection" id="newCollectionBtn" aria-label="Tạo bộ sưu tập">+</button></div>
+          <div class="collection-list" id="collectionList"></div>
+          <div class="sidebar-note"><span>✳</span><p>Dữ liệu được lưu riêng trên thiết bị này.</p></div>
+        </aside>
+
+        <section class="content" id="contentArea">
+          <div class="content-head"><div><div class="eyebrow small" id="collectionEyebrow">BỘ SƯU TẬP</div><h2 id="collectionTitle">Từ vựng cơ bản</h2><p id="collectionMeta">0 flashcard · Bắt đầu thêm từ mới nhé</p></div><button class="primary-btn" id="addCardBtn"><span>+</span> Thêm flashcard</button></div>
+          <div class="toolbar"><div class="view-tabs"><button class="tab active" data-view="study">✦ Ôn tập</button><button class="tab" data-view="all">☷ Tất cả thẻ</button></div><button class="text-btn" id="editCollectionBtn">••• <span>Tuỳ chọn bộ thẻ</span></button></div>
+          <div id="studyView" class="study-view"></div>
+          <div id="allView" class="all-view hidden"></div>
+        </section>
+      </section>
+    </main>
+    <footer><span>HANZI STUDIO</span><span>Học một chút mỗi ngày <b>✳</b></span></footer>
+  </div>
+
+  <dialog id="collectionDialog" class="modal"><form method="dialog" id="collectionForm"><div class="modal-top"><div class="eyebrow small">THƯ VIỆN CỦA BẠN</div><button class="close-btn" value="cancel" aria-label="Đóng">×</button></div><h2 id="collectionDialogTitle">Bộ sưu tập mới</h2><label class="field-label" for="collectionName">Tên bộ sưu tập</label><input id="collectionName" class="input" maxlength="50" placeholder="Ví dụ: HSK 1 · Đồ ăn" required><div class="modal-actions"><button class="secondary-btn" value="cancel">Huỷ</button><button class="primary-btn" id="saveCollectionBtn" value="default">Tạo bộ sưu tập</button></div></form></dialog>
+
+  <dialog id="cardDialog" class="modal card-modal"><form method="dialog" id="cardForm"><div class="modal-top"><div class="eyebrow small">THẺ HỌC MỚI</div><button class="close-btn" value="cancel" aria-label="Đóng">×</button></div><h2 id="cardDialogTitle">Thêm flashcard</h2><label class="field-label" for="frontText">Mặt trước <span>· phần sẽ hiện khi ôn tập</span></label><input id="frontText" class="input hanzi-input" maxlength="100" placeholder="你好" required><label class="field-label" for="backText">Mặt sau <span>· nghĩa, pinyin hoặc ghi chú</span></label><textarea id="backText" class="input" rows="3" maxlength="500" placeholder="nǐ hǎo · xin chào" required></textarea><div class="field-label style-label">Kiểu thẻ</div><div class="style-picker"><label class="style-option"><input type="radio" name="cardStyle" value="paper" checked><span class="style-swatch swatch-paper">Aa</span><span>Giấy mộc</span></label><label class="style-option"><input type="radio" name="cardStyle" value="ink"><span class="style-swatch swatch-ink">Aa</span><span>Mực tàu</span></label><label class="style-option"><input type="radio" name="cardStyle" value="peach"><span class="style-swatch swatch-peach">Aa</span><span>Đào phấn</span></label><label class="style-option"><input type="radio" name="cardStyle" value="sage"><span class="style-swatch swatch-sage">Aa</span><span>Trà xanh</span></label></div><div class="modal-actions"><button class="secondary-btn" value="cancel">Huỷ</button><button class="primary-btn" id="saveCardBtn" value="default">Lưu flashcard</button></div></form></dialog>
+  <input id="importFile" type="file" accept="application/json,.json" hidden>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
