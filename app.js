@@ -68,7 +68,7 @@ function renderStudy(collection) {
 function renderAllCards(collection) {
   const target = $('#allView');
   if (!collection.cards.length) { target.innerHTML = '<div class="empty-state"><div class="empty-illustration">空</div><h3>Chưa có flashcard</h3><p>Thẻ mới sẽ xuất hiện tại đây.</p></div>'; return; }
-  target.innerHTML = collection.cards.map((card) => `<article class="mini-card ${escapeHtml(card.style || 'paper')}" data-card="${escapeHtml(card.id)}" tabindex="0"><div class="mini-actions"><button data-edit="${escapeHtml(card.id)}" aria-label="Sửa thẻ">✎</button><button data-delete="${escapeHtml(card.id)}" aria-label="Xoá thẻ">×</button></div><div class="mini-front">${escapeHtml(card.front)}</div><div class="mini-back">${escapeHtml(card.back).replace(/\n/g, ' · ')}</div></article>`).join('');
+  target.innerHTML = collection.cards.map((card) => `<article class="mini-card ${escapeHtml(card.style || 'paper')}" data-card="${escapeHtml(card.id)}" tabindex="0"><div class="mini-actions"><button data-edit="${escapeHtml(card.id)}" aria-label="Sửa flashcard">Sửa</button><button data-delete="${escapeHtml(card.id)}" aria-label="Xoá flashcard">Xoá</button></div><div class="mini-front">${escapeHtml(card.front)}</div><div class="mini-back">${escapeHtml(card.back).replace(/\n/g, ' · ')}</div></article>`).join('');
   $$('.mini-card').forEach((item) => { item.addEventListener('click', (event) => { if (event.target.closest('button')) return; const id = item.dataset.card; cardIndex = collection.cards.findIndex((card) => card.id === id); flipped = false; view = 'study'; $$('.tab').forEach((tab) => tab.classList.toggle('active', tab.dataset.view === view)); renderContent(); }); });
   $$('[data-edit]').forEach((button) => button.addEventListener('click', (event) => { event.stopPropagation(); openCardDialog(button.dataset.edit); }));
   $$('[data-delete]').forEach((button) => button.addEventListener('click', (event) => { event.stopPropagation(); deleteCard(button.dataset.delete); }));
@@ -96,7 +96,17 @@ function openCardDialog(cardId = null) {
   $('#saveCardBtn').textContent = card ? 'Lưu thay đổi' : 'Lưu flashcard';
   $('#cardDialog').showModal(); setTimeout(() => $('#frontText').focus(), 50);
 }
-function deleteCard(cardId) { const collection = currentCollection(); if (!collection) return; collection.cards = collection.cards.filter((card) => card.id !== cardId); flipped = false; render(); toast('Đã xoá flashcard.'); }
+function deleteCard(cardId) {
+  const collection = currentCollection();
+  const card = collection?.cards.find((item) => item.id === cardId);
+  if (!collection || !card) return;
+  if (!window.confirm(`Xoá flashcard “${card.front}”?`)) return;
+  collection.cards = collection.cards.filter((item) => item.id !== cardId);
+  cardIndex = Math.min(cardIndex, Math.max(0, collection.cards.length - 1));
+  flipped = false;
+  render();
+  toast('Đã xoá flashcard.');
+}
 $('#newCollectionBtn').onclick = openNewCollection;
 $('#addCardBtn').onclick = () => openCardDialog();
 $('#editCollectionBtn').onclick = openEditCollection;
